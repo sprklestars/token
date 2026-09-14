@@ -1,0 +1,43 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+branch: Q0DeR-MaG1C-BrAnCh-Fo2-NoN-GiT-Or-No-C0MmIt
+nodes_managed: true
+exported_at: "2026-09-03T11:51:46Z"
+modules:
+    "":
+        dir_name: Vercel v0 自动注册编排器
+        title: Vercel v0 自动注册编排器
+        scope:
+            - src/config.ts
+            - src/index.ts
+            - src/orchestrator.ts
+            - .gitignore
+            - package-lock.json
+            - package.json
+            - tsconfig.json
+            - v0-api-guide.md
+        source_files: []
+        children:
+            - services
+            - utils
+        depends_on: []
+        related_to: []
+    services:
+        dir_name: 第三方服务集成（邮箱_短信_v0 Token）
+        title: 第三方服务集成（邮箱/短信/v0 Token）
+        scope:
+            - src/services/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    utils:
+        dir_name: 通用工具库（日志、重试与结果持久化）
+        title: 通用工具库（日志、重试与结果持久化）
+        scope:
+            - src/utils/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []

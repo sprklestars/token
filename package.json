@@ -1,0 +1,24 @@
+{
+  "name": "vercel-auto-register",
+  "version": "1.0.0",
+  "description": "Vercel 自动注册综合项目 - 集成邮箱API、接码平台、浏览器自动化",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "start:headed": "tsx src/index.ts --headed",
+    "dry-run": "tsx src/index.ts --dry-run",
+    "web": "tsx src/web/server.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "camoufox-js": "^0.1.0",
+    "dotenv": "^16.4.7",
+    "patchright": "^1.62.2",
+    "rebrowser-playwright-core": "^1.52.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

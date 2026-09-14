@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v0 注册控制台</title>
+<style>
+:root {
+  --bg: #0b0e14; --panel: #12161f; --panel2: #171c28; --border: #232a3a;
+  --text: #e2e8f0; --muted: #8b99b3;
+  --blue: #4f8cff; --green: #34d399; --red: #f87171; --yellow: #fbbf24; --cyan: #22d3ee;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 14px; min-height: 100vh; }
+
+header { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+header h1 { font-size: 17px; display: flex; align-items: center; gap: 10px; }
+header h1 .logo { width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg, #4f8cff, #22d3ee); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; }
+.hdr-right { display: flex; gap: 10px; align-items: center; }
+.badge { padding: 4px 12px; border-radius: 14px; font-size: 12px; background: var(--panel2); border: 1px solid var(--border); color: var(--muted); }
+.badge b { color: var(--green); font-size: 13px; }
+
+main { max-width: 1280px; margin: 0 auto; padding: 20px 24px 60px; }
+
+/* 统计卡片 */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.stat .label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.stat .value { font-size: 24px; font-weight: 700; }
+.stat .value.green { color: var(--green); } .stat .value.red { color: var(--red); }
+.stat .value.blue { color: var(--blue); } .stat .value.yellow { color: var(--yellow); }
+
+/* 面板 */
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 20px; }
+.panel h2 { font-size: 15px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.panel h2 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
+
+/* 批量控制 */
+.batch-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.batch-controls label { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+input[type=number] { width: 90px; padding: 8px 10px; background: var(--panel2); color: var(--text); border: 1px solid var(--border); border-radius: 7px; font-size: 14px; outline: none; }
+input[type=number]:focus { border-color: var(--blue); }
+button { padding: 8px 18px; border-radius: 7px; border: 1px solid var(--border); background: var(--panel2); color: var(--text); font-size: 14px; cursor: pointer; transition: filter .15s; }
+button:hover { filter: brightness(1.25); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.primary { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+button.danger { background: transparent; border-color: var(--red); color: var(--red); }
+.switch { position: relative; width: 36px; height: 20px; appearance: none; background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; outline: none; transition: background .2s; }
+.switch:checked { background: var(--blue); }
+.switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: left .2s; }
+.switch:checked::after { left: 19px; }
+
+.progress-wrap { margin-bottom: 12px; }
+.progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.progress-bar { height: 8px; background: var(--panel2); border-radius: 4px; overflow: hidden; }
+.progress-bar > div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--blue), var(--cyan)); transition: width .5s; border-radius: 4px; }
+.phase-line { font-size: 13px; color: var(--cyan); margin-bottom: 10px; min-height: 18px; }
+
+/* 日志终端 */
+.log-terminal { background: #07090d; border: 1px solid var(--border); border-radius: 8px; height: 280px; overflow-y: auto; padding: 10px 12px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.7; }
+.log-line { white-space: pre-wrap; word-break: break-all; }
+.log-line .t { color: #4a5568; margin-right: 8px; }
+.lv-info { color: #93b4ff; } .lv-success { color: var(--green); } .lv-warn { color: var(--yellow); }
+.lv-error { color: var(--red); } .lv-step { color: var(--cyan); }
+.log-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.log-toolbar .hint { font-size: 12px; color: var(--muted); }
+.log-toolbar button { padding: 3px 10px; font-size: 12px; }
+
+/* 表格 */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 500; font-size: 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+tr:hover td { background: rgba(79, 140, 255, .04); }
+.mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+.tag { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; }
+.tag.ok { background: rgba(52, 211, 153, .12); color: var(--green); }
+.tag.fail { background: rgba(248, 113, 113, .12); color: var(--red); }
+.tag.key { background: rgba(79, 140, 255, .12); color: var(--blue); }
+.actions { display: flex; gap: 6px; }
+.actions button { padding: 3px 10px; font-size: 12px; }
+.empty-state { text-align: center; padding: 36px; color: var(--muted); }
+
+/* 弹窗 */
+dialog { background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 0; width: min(720px, 92vw); max-height: 84vh; }
+dialog::backdrop { background: rgba(0, 0, 0, .6); }
+.dlg-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--border); font-weight: 600; }
+.dlg-body { padding: 16px 18px; overflow-y: auto; max-height: calc(84vh - 60px); }
+.dlg-body pre { background: #07090d; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+.kv { display: grid; grid-template-columns: 130px 1fr; gap: 6px 12px; margin-bottom: 14px; font-size: 13px; }
+.kv .k { color: var(--muted); }
+
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--panel2); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 99; }
+.toast.show { opacity: 1; }
+
+.notice { background: rgba(251, 191, 36, .08); border: 1px solid rgba(251, 191, 36, .25); color: var(--yellow); border-radius: 8px; padding: 10px 14px; font-size: 12.5px; margin-bottom: 16px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="logo">v0</span>Vercel v0 注册控制台</h1>
+  <div class="hdr-right">
+    <span class="badge" id="proxyBadge">代理: 未启用</span>
+    <span class="badge">接码余额 <b id="balance">--</b></span>
+    <span class="badge" id="connBadge">日志: 连接中</span>
+  </div>
+</header>
+
+<main>
+  <!-- 统计卡片 -->
+  <div class="stats">
+    <div class="stat"><div class="label">总注册数</div><div class="value blue" id="statTotal">0</div></div>
+    <div class="stat"><div class="label">成功</div><div class="value green" id="statSuccess">0</div></div>
+    <div class="stat"><div class="label">失败</div><div class="value red" id="statFailed">0</div></div>
+    <div class="stat"><div class="label">API Keys</div><div class="value" id="statKeys">0</div></div>
+    <div class="stat"><div class="label">预估成本</div><div class="value yellow" id="statCost">$0</div></div>
+  </div>
+
+  <!-- 批量注册 -->
+  <section class="panel">
+    <h2><span class="dot"></span>批量注册</h2>
+    <div class="notice">
+      批量为<b>串行执行</b>(同 IP 并发必触发风控),轮间自动冷却 8-20s。headed 模式会弹出浏览器窗口,headless 风控风险略高。
+      代理状态见右上角徽章:<b>已启用</b>时可靠代理出口注册;<b>未启用(直连)</b>时建议单批不超过 5 个,若日志出现 "try a different sign up method" 拦截文案请立即停止。
+    </div>
+    <div class="batch-controls">
+      <label>数量
+        <input type="number" id="countInput" value="3" min="1" max="50">
+      </label>
+      <label>
+        <input type="checkbox" class="switch" id="headlessToggle">
+        headless(无窗口)
+      </label>
+      <button class="primary" id="startBtn" onclick="startBatch()">开始批量</button>
+      <button class="danger" id="stopBtn" onclick="stopBatch()" disabled>停止</button>
+      <button onclick="refreshAll()">刷新数据</button>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span id="progressText">空闲</span>
+        <span id="progressCount">0 / 0</span>
+      </div>
+      <div class="progress-bar"><div id="progressFill"></div></div>
+    </div>
+    <div class="phase-line" id="phaseLine"></div>
+
+    <div class="log-toolbar">
+      <span class="hint">实时日志(SSE)</span>
+      <button onclick="clearLogs()">清空</button>
+    </div>
+    <div class="log-terminal" id="logTerminal"></div>
+  </section>
+
+  <!-- 注册记录 -->
+  <section class="panel">
+    <h2><span class="dot" style="background:var(--green)"></span>注册记录</h2>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>时间</th><th>邮箱</th><th>手机号</th><th>国家</th>
+            <th>状态</th><th>API Key</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="regTable">
+          <tr><td colspan="7" class="empty-state">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<!-- 详情弹窗 -->
+<dialog id="detailDlg">
+  <div class="dlg-header">
+    <span id="dlgTitle">注册详情</span>
+    <button onclick="document.getElementById('detailDlg').close()">关闭</button>
+  </div>
+  <div class="dlg-body" id="dlgBody"></div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ── 工具 ──
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.status);
+  return data;
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(
+    () => toast('已复制到剪贴板'),
+    () => toast('复制失败'),
+  );
+}
+
+function fmtTime(iso) {
+  if (!iso) return '--';
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+// ── 数据加载 ──
+async function loadStats() {
+  try {
+    const s = await api('/api/stats');
+    $('statTotal').textContent = s.total;
+    $('statSuccess').textContent = s.success;
+    $('statFailed').textContent = s.failed;
+    $('statKeys').textContent = s.apiKeys;
+    $('statCost').textContent = '$' + s.cost;
+  } catch (e) { console.error('stats', e); }
+}
+
+async function loadBalance() {
+  try {
+    const b = await api('/api/balance');
+    $('balance').textContent = b.balance != null ? '$' + Number(b.balance).toFixed(2) : '查询失败';
+  } catch (e) { $('balance').textContent = '查询失败'; }
+}
+
+async function loadProxy() {
+  const badge = $('proxyBadge');
+  try {
+    const p = await api('/api/proxy');
+    if (!p.configured) {
+      badge.textContent = '代理: 未启用(直连)';
+      badge.title = '未配置 PROXY_URL,同 IP 批量建议单批 ≤ 5 个';
+      badge.style.color = 'var(--yellow)';
+    } else if (p.status === 'ok') {
+      badge.textContent = '代理: ✓ 已启用';
+      badge.title = '出口 ' + p.server;
+      badge.style.color = 'var(--green)';
+    } else {
+      badge.textContent = '代理: ✗ 异常';
+      badge.title = p.error || '未知错误';
+      badge.style.color = 'var(--red)';
+    }
+  } catch (e) {
+    badge.textContent = '代理: 查询失败';
+    badge.style.color = 'var(--muted)';
+  }
+}
+
+async function loadRegistrations() {
+  try {
+    const list = await api('/api/registrations');
+    const tbody = $('regTable');
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无注册记录</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(r => `
+      <tr>
+        <td class="mono">${esc(fmtTime(r.timestamp))}</td>
+        <td class="mono">${esc(r.email)}</td>
+        <td class="mono">${esc(r.phone)}</td>
+        <td>${esc(r.country)}</td>
+        <td>${r.registered ? '<span class="tag ok">已注册</span>' : '<span class="tag fail">未完成</span>'}</td>
+        <td>${r.apiKey
+          ? `<span class="tag key mono" style="cursor:pointer" title="点击复制完整 Key" onclick="copyText('${esc(r.apiKey)}')">${esc(r.apiKey.slice(0, 18))}…</span>`
+          : '<span style="color:var(--muted)">--</span>'}</td>
+        <td class="actions">
+          <button onclick="showDetail('${esc(r.file)}')">详情</button>
+        </td>
+      </tr>`).join('');
+  } catch (e) {
+    $('regTable').innerHTML = `<tr><td colspan="7" class="empty-state">加载失败: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function showDetail(file) {
+  try {
+    const d = await api('/api/registrations/' + file);
+    $('dlgTitle').textContent = '注册详情 - ' + (d.email?.address ?? file);
+    // 摘要 + 完整 JSON(authCookies 折叠)
+    const summary = d.vercel?.authCookies
+      ? { ...d, vercel: { ...d.vercel, authCookies: `<${Object.keys(d.vercel.authCookies).length} 个 cookie,见下方 JSON>` } }
+      : d;
+    $('dlgBody').innerHTML = `
+      <div class="kv">
+        <span class="k">邮箱</span><span class="mono">${esc(d.email?.address)}</span>
+        <span class="k">手机号</span><span class="mono">${esc(d.phone?.number)} (${esc(d.phone?.country)})</span>
+        <span class="k">注册状态</span><span>${d.vercel?.registered ? '✅ 已注册' : '❌ 未完成'}</span>
+        <span class="k">API Key</span><span class="mono">${esc(d.v0?.apiKey ?? '--')}</span>
+        <span class="k">时间</span><span class="mono">${esc(fmtTime(d.timestamp))}</span>
+      </div>
+      <button onclick="copyText(${esc(JSON.stringify(d.v0?.apiKey ?? ''))})" ${d.v0?.apiKey ? '' : 'disabled'}>复制 API Key</button>
+      <pre>${esc(JSON.stringify(summary, null, 2))}</pre>`;
+    $('detailDlg').showModal();
+  } catch (e) { toast('详情加载失败: ' + e.message); }
+}
+
+function refreshAll() {
+  loadStats(); loadRegistrations(); loadBalance();
+}
+
+// ── 批量控制 ──
+async function startBatch() {
+  const count = Math.max(1, Math.min(50, Number($('countInput').value) || 1));
+  const headless = $('headlessToggle').checked;
+  if (!confirm(`确认开始批量注册 ${count} 个账号?\n预估成本 $${(count * 0.1).toFixed(2)}(美国号 $0.1/个)`)) return;
+  try {
+    await api('/api/batch/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ count, headless }),
+    });
+    toast(`批量任务已启动: ${count} 个`);
+    pollStatus();
+  } catch (e) { toast('启动失败: ' + e.message); }
+}
+
+async function stopBatch() {
+  try {
+    const r = await api('/api/batch/stop', { method: 'POST' });
+    toast(r.ok ? '停止请求已发送' : '当前无可停止的任务');
+  } catch (e) { toast('操作失败: ' + e.message); }
+}
+
+let statusTimer = null;
+let lastRunning = false;
+
+async function pollStatus() {
+  let st;
+  try { st = await api('/api/batch/status'); } catch { return; }
+
+  const done = st.completed, total = st.total;
+  $('progressText').textContent = st.running ? '运行中' : (st.stopRequested ? '停止中' : '空闲');
+  $('progressCount').textContent = `${done} / ${total}`;
+  $('progressFill').style.width = total > 0 ? (done / total * 100) + '%' : '0%';
+  $('phaseLine').textContent = st.currentPhase || '';
+  $('startBtn').disabled = st.running;
+  $('stopBtn').disabled = !st.running;
+  if (st.running || st.stopRequested) {
+    $('progressText').innerHTML = `运行中 <span style="color:var(--green)">成功 ${st.succeeded}</span> / <span style="color:var(--red)">失败 ${st.failed}</span>`;
+  } else if (total > 0) {
+    $('progressText').innerHTML = `已完成 <span style="color:var(--green)">成功 ${st.succeeded}</span> / <span style="color:var(--red)">失败 ${st.failed}</span>`;
+  }
+
+  // 刚从运行中切换为结束 → 刷新数据(新结果已落盘)
+  if (lastRunning && !st.running) {
+    refreshAll();
+    toast(`批量结束: 成功 ${st.succeeded} / 失败 ${st.failed}`);
+  }
+  lastRunning = st.running;
+
+  clearTimeout(statusTimer);
+  // 运行中 2s 轮询,空闲 10s
+  statusTimer = setTimeout(pollStatus, st.running ? 2000 : 10000);
+}
+
+// ── SSE 实时日志 ──
+let logCount = 0;
+const MAX_LOG_LINES = 500;
+
+function appendLog(entry) {
+  const term = $('logTerminal');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="t">${esc(entry.time)}</span><span class="lv-${esc(entry.level)}">${esc(entry.msg)}</span>`;
+  term.appendChild(line);
+  logCount++;
+  // 限制行数
+  while (logCount > MAX_LOG_LINES && term.firstChild) {
+    term.removeChild(term.firstChild);
+    logCount--;
+  }
+  // 自动滚底(用户没往上翻时)
+  const nearBottom = term.scrollHeight - term.scrollTop - term.clientHeight < 60;
+  if (nearBottom) term.scrollTop = term.scrollHeight;
+}
+
+function connectLogs() {
+  const es = new EventSource('/api/logs');
+  es.onopen = () => { $('connBadge').textContent = '日志: 实时'; };
+  es.onerror = () => { $('connBadge').textContent = '日志: 断开'; };
+  es.onmessage = e => {
+    try { appendLog(JSON.parse(e.data)); } catch { /* 忽略 */ }
+  };
+}
+
+function clearLogs() {
+  $('logTerminal').innerHTML = '';
+  logCount = 0;
+}
+
+// ── 初始化 ──
+refreshAll();
+loadProxy();
+connectLogs();
+pollStatus();
+setInterval(loadBalance, 60000);
+setInterval(loadProxy, 60000);
+</script>
+</body>
+</html>

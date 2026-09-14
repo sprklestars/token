@@ -1,0 +1,8 @@
+node_modules/
+dist/
+output/*.json
+screenshots/
+.env
+*.log
+.qoder/
+package-lock.json
